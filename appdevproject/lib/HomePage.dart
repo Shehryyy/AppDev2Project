@@ -1,5 +1,6 @@
 
 import 'package:appdevproject/JsonModels/items.dart';
+import 'package:appdevproject/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -19,6 +20,7 @@ class _AddItemPageState extends State<AddItemPage> {
   String? selectedType;
   DateTime? neededByDate;
   Database? _database;
+  int _currentIndex = 1;
 
   //Global key
   final formKey = GlobalKey<FormState>();
@@ -237,11 +239,37 @@ class _AddItemPageState extends State<AddItemPage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
         selectedItemColor: const Color(0xFF7BA8F9),
         unselectedItemColor: const Color(0xFF7BA8F9),
         backgroundColor: const Color(0xFFE9ECF5),
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          switch (index) {
+            case 0 :
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  Placeholder()),
+              );
+              break;
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  AddItemPage(userId: widget.userId,)),
+              );
+              break;
+            case 2:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  UserProfilePage()),
+              );
+              break;
+          }
+        },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Offers'),
+          BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
         ],

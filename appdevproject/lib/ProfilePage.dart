@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const CartSnapApp());
-}
+import 'HomePage.dart';
+
 
 class CartSnapApp extends StatelessWidget {
-  const CartSnapApp({super.key});
+  final int userId;
+  const CartSnapApp({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -17,15 +17,22 @@ class CartSnapApp extends StatelessWidget {
   }
 }
 
-class UserProfilePage extends StatelessWidget {
+class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
+  @override
+  State<UserProfilePage> createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     final TextEditingController firstNameController = TextEditingController(text: "User First Name");
     final TextEditingController lastNameController = TextEditingController(text: "User Last Name");
     final TextEditingController emailController = TextEditingController(text: "User Email");
     final TextEditingController passwordController = TextEditingController(text: "User Password");
+
+    int _currentIndex = 1;
 
     return Scaffold(
       backgroundColor: const Color(0xFFCCE9FF),
@@ -92,25 +99,42 @@ class UserProfilePage extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: const Color(0xFF7BA8F9),
-        unselectedItemColor: const Color(0xFF7BA8F9),
-        backgroundColor: const Color(0xFFE9ECF5),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: 'Offers',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+      bottomNavigationBar:  BottomNavigationBar(
+      currentIndex: _currentIndex,
+      selectedItemColor: const Color(0xFF7BA8F9),
+      unselectedItemColor: const Color(0xFF7BA8F9),
+      backgroundColor: const Color(0xFFE9ECF5),
+      onTap: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+        switch (index) {
+          case 0 :
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) =>  Placeholder()),
+            );
+            break;
+          case 1:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) =>  AddItemPage(userId: 1,)), //TO CHANGE LATER
+            );
+            break;
+          case 2:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) =>  UserProfilePage()),
+            );
+            break;
+        }
+      },
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
+      ],
+    ),
     );
   }
 

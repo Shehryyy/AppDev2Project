@@ -12,6 +12,7 @@ void main() {
 }
 
 class CartSnapApp extends StatelessWidget {
+
   const CartSnapApp({super.key});
 
   @override
