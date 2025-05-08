@@ -149,21 +149,25 @@ class _SignUpPageState extends State<SignUpPage> {
                         decoration: _inputDecoration('Enter your first name'),
                         validator: (value) => value!.isEmpty ? 'Please enter first name' : null,
                       ),
+                      SizedBox(height: 10,),
                       TextFormField(
                         controller: _lastName,
                         decoration: _inputDecoration('Enter your last name'),
                         validator: (value) => value!.isEmpty ? 'Please enter last name' : null,
                       ),
+                      SizedBox(height: 10,),
                       TextFormField(
                         controller: _email,
                         decoration: _inputDecoration('Enter your email'),
                         validator: (value) => value!.isEmpty ? 'Please enter email' : null,
                       ),
+                      SizedBox(height: 10,),
                       TextFormField(
                         controller: _password,
                         decoration: _inputDecoration('Enter your password'),
                         validator: (value) => value!.isEmpty ? 'Please enter password' : null,
                       ),
+                      SizedBox(height: 10,),
                       TextFormField(
                         controller: _confirmedPassword,
                         decoration: _inputDecoration('Enter your confirmed password'),
@@ -209,7 +213,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Success'),
-                            content: const Text('Sign up successful!'),
+                            content:  const Text('Sign up successful!',),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
@@ -233,6 +237,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         if (formKey.currentState!.validate()){
                           final db = DatabaseHelper.instance;
                           db.signup(Users(
+                            firstName: _firstName.text,
+                              lastName: _lastName.text,
                               email: _email.text,
                               userPassword: _password.text))
                               .whenComplete((){
@@ -243,7 +249,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                       child: Text('Sign up',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontSize: 16,
                           )),
                     ),

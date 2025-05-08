@@ -80,5 +80,26 @@ class DatabaseHelper {
     }
     return null;
   }
+
+
+  Future<Database> _initDatabaseItem() async {
+    String path = join(await getDatabasesPath(), 'items.db');
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE items (
+            itemId INTEGER PRIMARY KEY AUTOINCREMENT,
+            itemName TEXT,
+            quantity TEXT,
+            type TEXT,
+            neededBy TEXT
+          )
+        ''');
+      },
+    );
+  }
 }
 

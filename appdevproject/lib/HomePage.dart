@@ -1,4 +1,8 @@
+
+import 'package:appdevproject/JsonModels/items.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
 import 'select_date_page.dart';
 
 class AddItemPage extends StatefulWidget {
@@ -14,10 +18,53 @@ class _AddItemPageState extends State<AddItemPage> {
   final TextEditingController quantityController = TextEditingController();
   String? selectedType;
   DateTime? neededByDate;
+  Database? _database;
+
+  //Global key
+  final formKey = GlobalKey<FormState>();
+
 
   final List<String> types = ['Dairies', 'Proteins', 'Snacks', 'Fruits/Vegetables'];
 
-  void _selectDate() async {
+  void initState() {
+    super.initState();
+    _initDatabaseItem();
+  }
+
+  Future<Database> _initDatabaseItem() async {
+    if (_database != null) return _database!;
+    String path = p.join(await getDatabasesPath(), 'items.db');
+    _database = await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+        CREATE TABLE items (
+          itemId INTEGER PRIMARY KEY AUTOINCREMENT,
+          itemName TEXT,
+          quantity TEXT,
+          type TEXT,
+          neededBy TEXT,
+          userId INTEGER
+        )
+      ''');
+      },
+    );
+    return _database!;
+  }
+
+
+  Future<void> insertItem(Items item) async {
+    final db = await _initDatabaseItem();
+    await db.insert(
+        'items',
+        item.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace
+    );
+  }
+
+
+ void _selectDate() async {
     final selected = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -156,7 +203,23 @@ class _AddItemPageState extends State<AddItemPage> {
                   } else if (neededByDate == null) {
                     _showAlert('Please select a needed-by date.');
                   } else {
-                    _showAlert('Item added successfully!');
+                    final item = Items(
+                        itemName: itemName,
+                        quantity: quantity,
+                        type: selectedType!,
+                        neededBy: neededByDate!.toIso8601String(),
+                        userId: widget.userId
+                    );
+
+                    insertItem(item).then((_) {
+                      _showAlert('Item added successfully!');
+                      itemNameController.clear();
+                      quantityController.clear();
+                      setState(() {
+                        selectedType = null;
+                        neededByDate = null;
+                      });
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(
