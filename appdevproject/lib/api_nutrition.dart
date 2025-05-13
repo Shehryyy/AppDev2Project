@@ -138,7 +138,7 @@ class _NutritionPageState extends State<NutritionPage> {
                     itemCount: _items.length,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.95,
+                      childAspectRatio: 0.92,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
                     ),

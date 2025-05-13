@@ -1,5 +1,6 @@
 
 import 'package:appdevproject/JsonModels/items.dart';
+import 'package:appdevproject/MainPage.dart';
 import 'package:appdevproject/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -222,6 +223,12 @@ class _AddItemPageState extends State<AddItemPage> {
                         neededByDate = null;
                       });
                     });
+                    _showAlert("Item added successfully");
+                    Future.delayed(Duration(seconds: 1), () {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -257,7 +264,7 @@ class _AddItemPageState extends State<AddItemPage> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) =>  AddItemPage(userId: widget.userId,)),
+                MaterialPageRoute(builder: (context) =>  MainPageProject(userId: widget.userId,)),
               );
               break;
             case 2:
