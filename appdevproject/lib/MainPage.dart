@@ -1,4 +1,9 @@
+import 'package:appdevproject/AddItemPage2.dart';
+import 'package:appdevproject/HomePage.dart';
+import 'package:appdevproject/List2Optional.dart';
+import 'package:appdevproject/LoginPage.dart';
 import 'package:appdevproject/api_nutrition.dart';
+import 'package:appdevproject/main.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -46,6 +51,74 @@ class _MainPageProjectState extends State<MainPageProject> {
     return Scaffold(
       appBar: AppBar(
         title: Text('My Items'),
+      ),
+      drawer: ListView(
+        children: [
+          UserAccountsDrawerHeader(
+              accountName: Text("Grocery List"), 
+              accountEmail: Text(""),
+          currentAccountPicture: Image.network("https://garlicdelight.com/wp-content/uploads/20210319-reverse-shopping-list-768x768.png", width: 400,),),
+          Container(
+            color: Colors.blue[50],
+            child: ListTile(
+              title: Text("Main List"),
+              leading: Icon(Icons.list),
+              onTap: (){
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
+              },
+            ),
+          ),
+
+
+          Container(
+            color: Colors.blue[50],
+            child: ListTile(
+              title: Text("List 2"),
+              leading: Icon(Icons.list),
+              onTap: (){
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
+              },
+            ),
+          ),
+
+          Container(
+            color: Colors.blue[50],
+            child: ListTile(
+              title: Text("Add Items"),
+              leading: Icon(Icons.list),
+              onTap: (){
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AddItemPage(userId: widget.userId)));
+              },
+            ),
+          ),
+
+          Container(
+            color: Colors.blue[50],
+            child: ListTile(
+              title: Text("Add Items Page 2"),
+              leading: Icon(Icons.list),
+              onTap: (){
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AddItemPage2(userId: widget.userId)));
+              },
+            ),
+          ),
+
+          Container(
+            color: Colors.blue[50],
+            child: ListTile(
+              title: Text("Logout"),
+              leading: Icon(Icons.lock),
+              onTap: (){
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()));
+              },
+            ),
+          ),
+        ],
       ),
       body: items.isEmpty
       ? const Center(child: Text("No items found."))

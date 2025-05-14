@@ -1,22 +1,24 @@
 
 import 'package:appdevproject/JsonModels/items.dart';
+import 'package:appdevproject/List2Optional.dart';
 import 'package:appdevproject/MainPage.dart';
 import 'package:appdevproject/ProfilePage.dart';
 import 'package:appdevproject/api_nutrition.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'JsonModels/items2.dart';
 import 'select_date_page.dart';
 
-class AddItemPage extends StatefulWidget {
+class AddItemPage2 extends StatefulWidget {
   final int userId;
-  const AddItemPage({super.key, required this.userId});
+  const AddItemPage2({super.key, required this.userId});
 
   @override
-  State<AddItemPage> createState() => _AddItemPageState();
+  State<AddItemPage2> createState() => _AddItemPageState2();
 }
 
-class _AddItemPageState extends State<AddItemPage> {
+class _AddItemPageState2 extends State<AddItemPage2> {
   final TextEditingController itemNameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
   String? selectedType;
@@ -37,13 +39,13 @@ class _AddItemPageState extends State<AddItemPage> {
 
   Future<Database> _initDatabaseItem() async {
     if (_database != null) return _database!;
-    String path = p.join(await getDatabasesPath(), 'items.db');
+    String path = p.join(await getDatabasesPath(), 'items2.db');
     _database = await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-        CREATE TABLE items (
+        CREATE TABLE IF NOT EXISTS items2 (
           itemId INTEGER PRIMARY KEY AUTOINCREMENT,
           itemName TEXT,
           quantity TEXT,
@@ -58,17 +60,17 @@ class _AddItemPageState extends State<AddItemPage> {
   }
 
 
-  Future<void> insertItem(Items item) async {
+  Future<void> insertItem2(Items2 item) async {
     final db = await _initDatabaseItem();
     await db.insert(
-        'items',
+        'items2',
         item.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace
+        conflictAlgorithm: ConflictAlgorithm.replace
     );
   }
 
 
- void _selectDate() async {
+  void _selectDate() async {
     final selected = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -123,7 +125,7 @@ class _AddItemPageState extends State<AddItemPage> {
           children: [
             const Center(
               child: Text(
-                'Adding item',
+                'Adding item for 2nd Page',
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
@@ -207,7 +209,7 @@ class _AddItemPageState extends State<AddItemPage> {
                   } else if (neededByDate == null) {
                     _showAlert('Please select a needed-by date.');
                   } else {
-                    final item = Items(
+                    final item = Items2(
                         itemName: itemName,
                         quantity: quantity,
                         type: selectedType!,
@@ -215,8 +217,8 @@ class _AddItemPageState extends State<AddItemPage> {
                         userId: widget.userId
                     );
 
-                    insertItem(item).then((_) {
-                      _showAlert('Item added successfully!');
+                    insertItem2(item).then((_) {
+                      _showAlert('Item added successfully to page 2!');
                       itemNameController.clear();
                       quantityController.clear();
                       setState(() {
@@ -224,11 +226,11 @@ class _AddItemPageState extends State<AddItemPage> {
                         neededByDate = null;
                       });
                     });
-                    _showAlert("Item added successfully");
+                    _showAlert("Item added successfully to page 2!");
                     Future.delayed(Duration(seconds: 1), () {
                       Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
+                          MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
                     });
                   }
                 },
