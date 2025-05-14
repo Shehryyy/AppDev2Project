@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:appdevproject/HomePage.dart';
-import 'package:appdevproject/SQLite/sqlite.dart';
-
 import 'HomePage.dart';
+import 'package:project/SQLite/sqlite.dart';
 import 'JsonModels/users.dart';
 import 'SQLite/sqlite.dart';
 import 'SignUp.dart';
@@ -12,7 +10,6 @@ void main() {
 }
 
 class CartSnapApp extends StatelessWidget {
-
   const CartSnapApp({super.key});
 
   @override
@@ -35,9 +32,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool isLoginTrue = false;
 
-  //Global Key
   final formKey = GlobalKey<FormState>();
 
   @override
@@ -45,27 +40,40 @@ class _LoginScreenState extends State<LoginScreen> {
     final db = DatabaseHelper.instance;
 
     login() async {
-      int? userId = await db.login(Users(
+      int? userId = await db.login(
+        Users(
           email: _emailController.text,
-          userPassword: _passwordController.text
-      ));
+          userPassword: _passwordController.text,
+        ),
+      );
 
-      if (userId != null) { // If user exists in DB
+      if (userId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => AddItemPage(userId: userId)),
         );
       } else {
-        setState(() {
-          isLoginTrue = true;
-        });
+        // Show popup dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Login Failed"),
+            content: const Text("No account found. Please try again or sign up."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
       }
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFCCE9FF), // Light background
+      backgroundColor: const Color(0xFFCCE9FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFB4D9F5), // Slightly darker blue
+        backgroundColor: const Color(0xFFB4D9F5),
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -139,25 +147,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
-                          );
-                        },
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: Color(0xFF666666),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 25),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -174,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child:  Text(
+                        child: const Text(
                           'Log in',
                           style: TextStyle(
                             color: Colors.white,
@@ -184,12 +173,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-
                     const Divider(
                       color: Color(0xFF555555),
                       thickness: 1.2,
                     ),
-
                     const SizedBox(height: 10),
                     const Text(
                       "Don't have an account?",
@@ -233,41 +220,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-// PLACEHOLDER PAGES
-
-class ForgotPasswordPage extends StatelessWidget {
-  const ForgotPasswordPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Forgot Password")),
-      body: const Center(child: Text("This is the Forgot Password page")),
-    );
-  }
-}
-
-/*class SignUpPage extends StatelessWidget {
-  const SignUpPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up")),
-      body: const Center(child: Text("This is the Sign Up page")),
-    );
-  }
-}*/
-
-/*class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: const Center(child: Text("Welcome to the CartSnap Home Page")),
-    );
-  }
-}*/
