@@ -1,14 +1,15 @@
-
-import 'package:appdevproject/JsonModels/items.dart';
-import 'package:appdevproject/List2Optional.dart';
-import 'package:appdevproject/MainPage.dart';
-import 'package:appdevproject/ProfilePage.dart';
-import 'package:appdevproject/api_nutrition.dart';
+import 'JsonModels/items.dart';
+import 'List2Optional.dart';
+import 'MainPage.dart';
+import 'ProfilePage.dart';
+import 'api_nutrition.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'JsonModels/items2.dart';
 import 'select_date_page.dart';
+import 'SQLite/sqlite.dart';
+import 'JsonModels/users.dart';
 
 class AddItemPage2 extends StatefulWidget {
   final int userId;
@@ -26,12 +27,10 @@ class _AddItemPageState2 extends State<AddItemPage2> {
   Database? _database;
   int _currentIndex = 1;
 
-  //Global key
   final formKey = GlobalKey<FormState>();
-
-
   final List<String> types = ['Dairies', 'Proteins', 'Snacks', 'Fruits/Vegetables'];
 
+  @override
   void initState() {
     super.initState();
     _initDatabaseItem();
@@ -59,16 +58,10 @@ class _AddItemPageState2 extends State<AddItemPage2> {
     return _database!;
   }
 
-
   Future<void> insertItem2(Items2 item) async {
     final db = await _initDatabaseItem();
-    await db.insert(
-        'items2',
-        item.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace
-    );
+    await db.insert('items2', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
-
 
   void _selectDate() async {
     final selected = await Navigator.push(
@@ -210,11 +203,11 @@ class _AddItemPageState2 extends State<AddItemPage2> {
                     _showAlert('Please select a needed-by date.');
                   } else {
                     final item = Items2(
-                        itemName: itemName,
-                        quantity: quantity,
-                        type: selectedType!,
-                        neededBy: neededByDate!.toIso8601String(),
-                        userId: widget.userId
+                      itemName: itemName,
+                      quantity: quantity,
+                      type: selectedType!,
+                      neededBy: neededByDate!.toIso8601String(),
+                      userId: widget.userId,
                     );
 
                     insertItem2(item).then((_) {
@@ -225,12 +218,14 @@ class _AddItemPageState2 extends State<AddItemPage2> {
                         selectedType = null;
                         neededByDate = null;
                       });
-                    });
-                    _showAlert("Item added successfully to page 2!");
-                    Future.delayed(Duration(seconds: 1), () {
-                      Navigator.pushReplacement(
+                      Future.delayed(const Duration(seconds: 1), () {
+                        Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
+                          MaterialPageRoute(
+                            builder: (context) => ListOptionalProject(userId: widget.userId),
+                          ),
+                        );
+                      });
                     });
                   }
                 },
@@ -253,35 +248,48 @@ class _AddItemPageState2 extends State<AddItemPage2> {
         selectedItemColor: const Color(0xFF7BA8F9),
         unselectedItemColor: const Color(0xFF7BA8F9),
         backgroundColor: const Color(0xFFE9ECF5),
-        onTap: (index) {
+        onTap: (index) async {
           setState(() {
             _currentIndex = index;
           });
+
           switch (index) {
-            case 0 :
+            case 0:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) =>  NutritionPage()),
+                MaterialPageRoute(builder: (context) => NutritionPage()),
               );
               break;
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) =>  MainPageProject(userId: widget.userId,)),
+                MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)),
               );
               break;
             case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) =>  UserProfilePage()),
-              );
+              final db = DatabaseHelper.instance;
+              final user = await db.getUserById(widget.userId);
+              if (user != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfilePage(
+                      userId: user.userId!,
+                      firstName: user.firstName ?? '',
+                      lastName: user.lastName ?? '',
+                      email: user.email ?? '',
+                      password: user.userPassword ?? '',
+                    ),
+                  ),
+                );
+              }
               break;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
