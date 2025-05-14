@@ -1,39 +1,48 @@
 import 'package:flutter/material.dart';
-
 import 'HomePage.dart';
-
-
-class CartSnapApp extends StatelessWidget {
-  final int userId;
-  const CartSnapApp({super.key, required this.userId});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CartSnap',
-      debugShowCheckedModeBanner: false,
-      home: const UserProfilePage(),
-    );
-  }
-}
+import 'LoginPage.dart';
+import 'SQLite/sqlite.dart';
+import 'JsonModels/users.dart';
 
 class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({super.key});
+  final int userId;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+
+  const UserProfilePage({
+    super.key,
+    required this.userId,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.password,
+  });
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
 class _UserProfilePageState extends State<UserProfilePage> {
+  late TextEditingController firstNameController;
+  late TextEditingController lastNameController;
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+
+  int _currentIndex = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    firstNameController = TextEditingController(text: widget.firstName);
+    lastNameController = TextEditingController(text: widget.lastName);
+    emailController = TextEditingController(text: widget.email);
+    passwordController = TextEditingController(text: widget.password);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TextEditingController firstNameController = TextEditingController(text: "User First Name");
-    final TextEditingController lastNameController = TextEditingController(text: "User Last Name");
-    final TextEditingController emailController = TextEditingController(text: "User Email");
-    final TextEditingController passwordController = TextEditingController(text: "User Password");
-
-    int _currentIndex = 1;
-
     return Scaffold(
       backgroundColor: const Color(0xFFCCE9FF),
       appBar: AppBar(
@@ -60,9 +69,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                const Text(
-                  'User Full Name',
-                  style: TextStyle(
+                Text(
+                  '${widget.firstName} ${widget.lastName}',
+                  style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF7BA8F9),
@@ -93,48 +102,52 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 const SizedBox(height: 30),
                 _blueButton('List of previously bought items', () {}),
                 const SizedBox(height: 15),
-                _blueButton('Log out', () {}),
+                _blueButton('Log out', () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (Route<dynamic> route) => false,
+                  );
+                }),
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar:  BottomNavigationBar(
-      currentIndex: _currentIndex,
-      selectedItemColor: const Color(0xFF7BA8F9),
-      unselectedItemColor: const Color(0xFF7BA8F9),
-      backgroundColor: const Color(0xFFE9ECF5),
-      onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-        switch (index) {
-          case 0 :
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  Placeholder()),
-            );
-            break;
-          case 1:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  AddItemPage(userId: 1,)), //TO CHANGE LATER
-            );
-            break;
-          case 2:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  UserProfilePage()),
-            );
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
-      ],
-    ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        selectedItemColor: const Color(0xFF7BA8F9),
+        unselectedItemColor: const Color(0xFF7BA8F9),
+        backgroundColor: const Color(0xFFE9ECF5),
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          switch (index) {
+            case 0:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NutritionPage()),
+              );
+              break;
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddItemPage(userId: widget.userId),
+                ),
+              );
+              break;
+            case 2:
+              break; 
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
     );
   }
 
@@ -169,10 +182,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
             Padding(
               padding: const EdgeInsets.only(right: 10),
               child: IconButton(
-                onPressed: () {
-                  // You will connect this later to update logic
-                },
                 icon: const Icon(Icons.edit, color: Color(0xFF7BA8F9)),
+                onPressed: () async {
+                  final db = DatabaseHelper.instance;
+
+                  Users updatedUser = Users(
+                    userId: widget.userId,
+                    firstName: firstNameController.text,
+                    lastName: lastNameController.text,
+                    email: emailController.text,
+                    userPassword: passwordController.text,
+                  );
+
+                  await db.updateUser(updatedUser);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Changes saved')),
+                  );
+                },
               ),
             ),
           ],
