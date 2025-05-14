@@ -1,14 +1,11 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:appdevproject/LoginPage.dart';
+import 'LoginPage.dart';
 import 'package:sqflite/sqflite.dart';
-
 import 'JsonModels/users.dart';
 import 'SQLite/sqlite.dart';
-
+import 'package:path_provider/path_provider.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -19,14 +16,11 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   Database? _database;
-  List<Map<String, dynamic>> _users = [];
   final _email = TextEditingController();
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
   final _password = TextEditingController();
   final _confirmedPassword = TextEditingController();
-
-  //Global key
   final formKey = GlobalKey<FormState>();
 
   void initState() {
@@ -41,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _database = await openDatabase(
       path,
       version: 1,
-      onCreate: (db,version) async {
+      onCreate: (db, version) async {
         await db.execute('''
         CREATE TABLE users (
         userId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,53 +47,10 @@ class _SignUpPageState extends State<SignUpPage> {
         ''');
       },
     );
-    _loadUsers();
-  }
-
-
-  Future<void> _loadUsers() async {
-    final users = await _database?.query('users');
-    setState(() {
-      _users = users ?? [];
-    });
   }
 
   final db = DatabaseHelper.instance;
 
-  Future<void> _insertUser() async {
-    if (_password.text.isEmpty) {
-      return;
-    }
-    await db.signup(Users(firstName: _firstName.text, lastName: _lastName.text ,email: _email.text, userPassword: _password.text)
-    );
-
-    _password.clear();
-  }
-
-  Future<bool> login (Users user) async {
-    if (_database == null) {
-      return false;
-    }
-
-    var result = await _database!.rawQuery(
-        "SELECT email, password FROM users where email = '${user.email}' AND userPassword = '${user.userPassword}'");
-
-    if (result.isNotEmpty) {
-      return true;
-    } else {
-      return false;
-    }
-
-  }
-
-  Future<int> signup (Users user) async{
-    if (_database == null) {
-      throw Exception("Database not initialized");
-    }
-    return await _database!.insert("users", user.toMap());
-
-
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,7 +79,7 @@ class _SignUpPageState extends State<SignUpPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Center(
                   child: Text(
                     'Sign up',
@@ -139,7 +90,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 Form(
                   key: formKey,
                   child: Column(
@@ -147,81 +98,100 @@ class _SignUpPageState extends State<SignUpPage> {
                       TextFormField(
                         controller: _firstName,
                         decoration: _inputDecoration('Enter your first name'),
-                        validator: (value) => value!.isEmpty ? 'Please enter first name' : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter first name';
+                          } else if (RegExp(r'\d').hasMatch(value)) {
+                            return 'Name cannot contain numbers';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10),
                       TextFormField(
                         controller: _lastName,
                         decoration: _inputDecoration('Enter your last name'),
-                        validator: (value) => value!.isEmpty ? 'Please enter last name' : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter last name';
+                          } else if (RegExp(r'\d').hasMatch(value)) {
+                            return 'Name cannot contain numbers';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10),
                       TextFormField(
                         controller: _email,
                         decoration: _inputDecoration('Enter your email'),
-                        validator: (value) => value!.isEmpty ? 'Please enter email' : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter email';
+                          } else if (!value.contains('@') ||
+                              (!value.endsWith('.com') &&
+                                  !value.endsWith('.ca'))) {
+                            return 'Enter a valid email (.com or .ca)';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10),
                       TextFormField(
                         controller: _password,
+                        obscureText: true,
                         decoration: _inputDecoration('Enter your password'),
-                        validator: (value) => value!.isEmpty ? 'Please enter password' : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter password';
+                          } else if (value.length < 8) {
+                            return 'Password must be at least 8 characters';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10),
                       TextFormField(
                         controller: _confirmedPassword,
-                        decoration: _inputDecoration('Enter your confirmed password'),
-                        validator: (value) => value!.isEmpty ? 'Please enter confirmed password' : null,
-                      )
+                        obscureText: true,
+                        decoration:
+                        _inputDecoration('Enter your confirmed password'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          } else if (value != _password.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
                     ],
                   ),
                 ),
-
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'Your password must be at least 8 characters',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF666666),
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      final password = _password.text.trim();
-                      final confirmPassword = _confirmedPassword.text.trim();
-
-                      if (password != confirmPassword) {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Password Mismatch'),
-                            content: const Text('Passwords do not match. Please try again.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
-                      } else {
-                        // TODO: Implement real sign up logic
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Success'),
-                            content:  const Text('Sign up successful!',),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
+                      if (formKey.currentState!.validate()) {
+                        db
+                            .signup(Users(
+                          firstName: _firstName.text,
+                          lastName: _lastName.text,
+                          email: _email.text,
+                          userPassword: _password.text,
+                        ))
+                            .whenComplete(() => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LoginScreen())));
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -232,26 +202,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: ElevatedButton(
-                      onPressed: (){
-                        if (formKey.currentState!.validate()){
-                          final db = DatabaseHelper.instance;
-                          db.signup(Users(
-                            firstName: _firstName.text,
-                              lastName: _lastName.text,
-                              email: _email.text,
-                              userPassword: _password.text))
-                              .whenComplete((){
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => LoginScreen()));
-                          });
-                        }
-                      },
-                      child: Text('Sign up',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                          )),
+                    child: const Text(
+                      'Sign up',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
