@@ -1,16 +1,16 @@
-import 'package:appdevproject/AddItemPage2.dart';
-import 'package:appdevproject/HomePage.dart';
-import 'package:appdevproject/List2Optional.dart';
-import 'package:appdevproject/LoginPage.dart';
-import 'package:appdevproject/api_nutrition.dart';
-import 'package:appdevproject/main.dart';
+import 'AddItemPage2.dart';
+import 'HomePage.dart';
+import 'List2Optional.dart';
+import 'LoginPage.dart';
+import 'api_nutrition.dart';
+import 'main.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-
 import 'JsonModels/items.dart';
 import 'ProfilePage.dart';
-
+import 'SQLite/sqlite.dart';
+import 'JsonModels/users.dart';
 
 class MainPageProject extends StatefulWidget {
   final int userId;
@@ -21,7 +21,7 @@ class MainPageProject extends StatefulWidget {
 }
 
 class _MainPageProjectState extends State<MainPageProject> {
-  List<Items> items =[];
+  List<Items> items = [];
   int _currentIndex = 1;
 
   @override
@@ -32,148 +32,216 @@ class _MainPageProjectState extends State<MainPageProject> {
 
   Future<void> _loadItems() async {
     final db = await openDatabase(
-      join(await getDatabasesPath(), 'items.db'),
+      p.join(await getDatabasesPath(), 'items.db'),
     );
 
     final List<Map<String, dynamic>> maps = await db.query(
-      'items' ,
-      where: 'userId = ?',
+      'items',
+      where: 'userId = ? AND isActive = 1',
       whereArgs: [widget.userId],
     );
 
     setState(() {
       items = maps.map((map) => Items.fromMap(map)).toList();
     });
-
   }
+
+  Future<void> markAsBought(int itemId) async {
+    final db = await openDatabase(p.join(await getDatabasesPath(), 'items.db'));
+    await db.update(
+      'items',
+      {'isActive': 0},
+      where: 'itemId = ?',
+      whereArgs: [itemId],
+    );
+    await _loadItems();
+  }
+
+  void _showItemDetails(Items item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFCCE9FF),
+        title: Text(item.itemName, style: const TextStyle(color: Colors.blue)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Quantity: ${item.quantity}"),
+            Text("Type: ${item.type}"),
+            Text("Needed By: ${item.neededBy.split("T")[0]}"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Back to list"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await markAsBought(item.itemId!);
+            },
+            child: const Text("Already Bought", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFCCE9FF),
       appBar: AppBar(
-        title: Text('My Items'),
+        title: const Text('My Items', style: TextStyle(color: Colors.blue)),
+        backgroundColor: const Color(0xFFB4D9F5),
+        centerTitle: true,
       ),
       drawer: ListView(
         children: [
-          UserAccountsDrawerHeader(
-              accountName: Text("Grocery List"), 
-              accountEmail: Text(""),
-          currentAccountPicture: Image.network("https://garlicdelight.com/wp-content/uploads/20210319-reverse-shopping-list-768x768.png", width: 400,),),
+          const UserAccountsDrawerHeader(
+            accountName: Text("Grocery List"),
+            accountEmail: Text(""),
+            currentAccountPicture: Image(
+              image: NetworkImage("https://garlicdelight.com/wp-content/uploads/20210319-reverse-shopping-list-768x768.png"),
+              width: 400,
+            ),
+            decoration: BoxDecoration(color: Color(0xFFB4D9F5)),
+          ),
           Container(
             color: Colors.blue[50],
             child: ListTile(
-              title: Text("Main List"),
-              leading: Icon(Icons.list),
-              onTap: (){
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
+              title: const Text("Main List"),
+              leading: const Icon(Icons.list),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
               },
             ),
           ),
-
-
           Container(
             color: Colors.blue[50],
             child: ListTile(
-              title: Text("List 2"),
-              leading: Icon(Icons.list),
-              onTap: (){
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
+              title: const Text("List 2"),
+              leading: const Icon(Icons.list),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
               },
             ),
           ),
-
           Container(
             color: Colors.blue[50],
             child: ListTile(
-              title: Text("Add Items"),
-              leading: Icon(Icons.list),
-              onTap: (){
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => AddItemPage(userId: widget.userId)));
+              title: const Text("Add Items"),
+              leading: const Icon(Icons.list),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemPage(userId: widget.userId)));
               },
             ),
           ),
-
           Container(
             color: Colors.blue[50],
             child: ListTile(
-              title: Text("Add Items Page 2"),
-              leading: Icon(Icons.list),
-              onTap: (){
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => AddItemPage2(userId: widget.userId)));
+              title: const Text("Add Items Page 2"),
+              leading: const Icon(Icons.list),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemPage2(userId: widget.userId)));
               },
             ),
           ),
-
           Container(
             color: Colors.blue[50],
             child: ListTile(
-              title: Text("Logout"),
-              leading: Icon(Icons.lock),
-              onTap: (){
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()));
+              title: const Text("Logout"),
+              leading: const Icon(Icons.lock),
+              onTap: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                );
               },
             ),
           ),
         ],
       ),
       body: items.isEmpty
-      ? const Center(child: Text("No items found."))
+          ? const Center(child: Text("No items found."))
           : ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return Card (
-              margin: const EdgeInsets.all(10),
-              child: ListTile(
-                title: Text(item.itemName),
-                subtitle: Text("Qty: ${item.quantity} | Type: ${item.type}"),
-                trailing: Text(
-                  "By ${item.neededBy.split("T")[0]}",
-                  style: const TextStyle(color: Colors.grey),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return Card(
+            margin: const EdgeInsets.all(10),
+            color: const Color(0xFFE9F4FF),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.blueAccent),
+            ),
+            child: ListTile(
+              onTap: () => _showItemDetails(item),
+              title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text("Qty: ${item.quantity} | Type: ${item.type}"),
+              trailing: Wrap(
+                spacing: 8,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                      // Edit logic can be added here
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      await markAsBought(item.itemId!);
+                    },
+                  ),
+                ],
               ),
-              ),
-            );
-          }),
+            ),
+          );
+        },
+      ),
       bottomNavigationBar: BottomNavigationBar(
-      currentIndex: _currentIndex,
-      selectedItemColor: const Color(0xFF7BA8F9),
-      unselectedItemColor: const Color(0xFF7BA8F9),
-      backgroundColor: const Color(0xFFE9ECF5),
-      onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-        switch (index) {
-          case 0 :
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  NutritionPage()),
-            );
-            break;
-          case 1:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  MainPageProject(userId: widget.userId,)),
-            );
-            break;
-          case 2:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  UserProfilePage()),
-            );
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
-      ],
-    ),
+        currentIndex: _currentIndex,
+        selectedItemColor: const Color(0xFF7BA8F9),
+        unselectedItemColor: const Color(0xFF7BA8F9),
+        backgroundColor: const Color(0xFFE9ECF5),
+        onTap: (index) async {
+          setState(() => _currentIndex = index);
+          switch (index) {
+            case 0:
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NutritionPage()));
+              break;
+            case 1:
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
+              break;
+            case 2:
+              final db = DatabaseHelper.instance;
+              final user = await db.getUserById(widget.userId);
+              if (user != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfilePage(
+                      userId: user.userId!,
+                      firstName: user.firstName ?? '',
+                      lastName: user.lastName ?? '',
+                      email: user.email ?? '',
+                      password: user.userPassword ?? '',
+                    ),
+                  ),
+                );
+              }
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
     );
   }
 }
