@@ -3,9 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() => runApp(MaterialApp(
-    home: NutritionPage(),
-    debugShowCheckedModeBanner: false,)
-  );
+  home: NutritionPage(),
+  debugShowCheckedModeBanner: false,)
+);
 
 class NutritionPage extends StatefulWidget {
   @override
