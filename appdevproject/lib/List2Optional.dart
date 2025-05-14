@@ -1,15 +1,7 @@
-import 'package:appdevproject/HomePage.dart';
-import 'package:appdevproject/LoginPage.dart';
-import 'package:appdevproject/api_nutrition.dart';
-import 'package:appdevproject/main.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-
-import 'JsonModels/items.dart';
 import 'JsonModels/items2.dart';
-import 'MainPage.dart';
-import 'ProfilePage.dart';
 
 class ListOptionalProject extends StatefulWidget {
   final int userId;
@@ -20,31 +12,36 @@ class ListOptionalProject extends StatefulWidget {
 }
 
 class _ListOptionalProjectState extends State<ListOptionalProject> {
-  List<Items2> items2 =[];
+  List<Items2> items2 = [];
 
   @override
   void initState() {
     super.initState();
+    ensureIsActiveColumnExists();
     _loadItems2();
   }
 
-  Future<void> _loadItems2() async {
-   final db = await _initDatabase();
+  Future<void> ensureIsActiveColumnExists() async {
+    final db = await _initDatabase();
+    await db.execute("ALTER TABLE items2 ADD COLUMN isActive INTEGER DEFAULT 1").catchError((e) {
+      if (!e.toString().contains("duplicate column")) throw e;
+    });
+  }
 
+  Future<void> _loadItems2() async {
+    final db = await _initDatabase();
     final List<Map<String, dynamic>> maps = await db.query(
-      'items2' ,
-      where: 'userId = ?',
+      'items2',
+      where: 'userId = ? AND isActive = 1',
       whereArgs: [widget.userId],
     );
-
     setState(() {
       items2 = maps.map((map) => Items2.fromMap(map)).toList();
     });
-
   }
 
   Future<Database> _initDatabase() async {
-    final path = join(await getDatabasesPath(), 'items2.db');
+    final path = p.join(await getDatabasesPath(), 'items2.db');
     return openDatabase(
       path,
       version: 1,
@@ -56,39 +53,97 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
             quantity TEXT,
             type TEXT,
             neededBy TEXT,
-            userId INTEGER
+            userId INTEGER,
+            isActive INTEGER DEFAULT 1
           )
         ''');
       },
     );
   }
 
+  Future<void> markAsBought(int itemId) async {
+    final db = await _initDatabase();
+    await db.update('items2', {'isActive': 0}, where: 'itemId = ?', whereArgs: [itemId]);
+    _loadItems2();
+  }
+
+  void _showItemDetails(Items2 item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFCCE9FF),
+        title: Text(item.itemName, style: const TextStyle(color: Colors.blue)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Quantity: ${item.quantity}"),
+            Text("Type: ${item.type}"),
+            Text("Needed By: ${item.neededBy.split("T")[0]}"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Back to list"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await markAsBought(item.itemId!);
+            },
+            child: const Text("Already Bought", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFCCE9FF),
       appBar: AppBar(
-        title: Text('My Optional List Items'),
+        title: const Text('Optional List Items', style: TextStyle(color: Colors.blue)),
+        backgroundColor: const Color(0xFFB4D9F5),
+        centerTitle: true,
       ),
       body: items2.isEmpty
           ? const Center(child: Text("No items found."))
           : ListView.builder(
-          itemCount: items2.length,
-          itemBuilder: (context, index) {
-            final item2 = items2[index];
-            return Card (
-              margin: const EdgeInsets.all(10),
-              child: ListTile(
-                title: Text(item2.itemName),
-                subtitle: Text("Qty: ${item2.quantity} | Type: ${item2.type}"),
-                trailing: Text(
-                  "By ${item2.neededBy.split("T")[0]}",
-                  style: const TextStyle(color: Colors.grey),
-                ),
+        itemCount: items2.length,
+        itemBuilder: (context, index) {
+          final item = items2[index];
+          return Card(
+            margin: const EdgeInsets.all(10),
+            color: const Color(0xFFE9F4FF),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.blueAccent),
+            ),
+            child: ListTile(
+              onTap: () => _showItemDetails(item),
+              title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text("Qty: ${item.quantity} | Type: ${item.type}"),
+              trailing: Wrap(
+                spacing: 8,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      await markAsBought(item.itemId!);
+                    },
+                  ),
+                ],
               ),
-            );
-          }),
-
+            ),
+          );
+        },
+      ),
     );
   }
 }
