@@ -195,7 +195,7 @@ Future<Database> _initDatabase(String dbName) async {
         subtitle: Text("Quantity: ${item2.quantity}"),
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: ()  => _confirmDelete(() => deleteItem(item2.itemId!)),
+          onPressed: ()  => _confirmDelete(() => deleteItem2(item2.itemId!)),
         ),
       ),
     );
