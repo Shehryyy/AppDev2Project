@@ -17,22 +17,14 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
   @override
   void initState() {
     super.initState();
-    ensureIsActiveColumnExists();
     _loadItems2();
-  }
-
-  Future<void> ensureIsActiveColumnExists() async {
-    final db = await _initDatabase();
-    await db.execute("ALTER TABLE items2 ADD COLUMN isActive INTEGER DEFAULT 1").catchError((e) {
-      if (!e.toString().contains("duplicate column")) throw e;
-    });
   }
 
   Future<void> _loadItems2() async {
     final db = await _initDatabase();
     final List<Map<String, dynamic>> maps = await db.query(
       'items2',
-      where: 'userId = ? AND isActive = 1',
+      where: 'userId = ?',
       whereArgs: [widget.userId],
     );
     setState(() {
@@ -53,17 +45,16 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
             quantity TEXT,
             type TEXT,
             neededBy TEXT,
-            userId INTEGER,
-            isActive INTEGER DEFAULT 1
+            userId INTEGER
           )
         ''');
       },
     );
   }
 
-  Future<void> markAsBought(int itemId) async {
+  Future<void> deleteItem(int itemId) async {
     final db = await _initDatabase();
-    await db.update('items2', {'isActive': 0}, where: 'itemId = ?', whereArgs: [itemId]);
+    await db.delete('items2', where: 'itemId = ?', whereArgs: [itemId]);
     _loadItems2();
   }
 
@@ -89,9 +80,9 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await markAsBought(item.itemId!);
+              await deleteItem(item.itemId!);
             },
-            child: const Text("Already Bought", style: TextStyle(color: Colors.red)),
+            child: const Text("Delete Item", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -122,23 +113,16 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
             ),
             child: ListTile(
               onTap: () => _showItemDetails(item),
-              title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("Qty: ${item.quantity} | Type: ${item.type}"),
-              trailing: Wrap(
-                spacing: 8,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      await markAsBought(item.itemId!);
-                    },
-                  ),
-                ],
+              title: Text(
+                item.itemName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text("Quantity: ${item.quantity}"),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () async {
+                  await deleteItem(item.itemId!);
+                },
               ),
             ),
           );
