@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'select_date_page.dart';
 import 'SQLite/sqlite.dart';
-import 'JsonModels/users.dart';
 
 class AddItemPage extends StatefulWidget {
   final int userId;
@@ -25,7 +24,6 @@ class _AddItemPageState extends State<AddItemPage> {
   Database? _database;
   int _currentIndex = 1;
 
-  final formKey = GlobalKey<FormState>();
   final List<String> types = ['Dairies', 'Proteins', 'Snacks', 'Fruits/Vegetables'];
 
   @override
@@ -50,7 +48,7 @@ class _AddItemPageState extends State<AddItemPage> {
           neededBy TEXT,
           userId INTEGER
         )
-      ''');
+        ''');
       },
     );
     return _database!;
@@ -246,22 +244,29 @@ class _AddItemPageState extends State<AddItemPage> {
         selectedItemColor: const Color(0xFF7BA8F9),
         unselectedItemColor: const Color(0xFF7BA8F9),
         backgroundColor: const Color(0xFFE9ECF5),
-        onTap: (index) async {  
-          setState(() {
-            _currentIndex = index;
-          });
+        onTap: (index) async {
+          setState(() => _currentIndex = index);
           switch (index) {
             case 0:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NutritionPage()),
-              );
+              final db = DatabaseHelper.instance;
+              final user = await db.getUserById(widget.userId);
+              if (user != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NutritionPage(
+                      userId: user.userId!,
+                      firstName: user.firstName ?? '',
+                      lastName: user.lastName ?? '',
+                      email: user.email ?? '',
+                      password: user.userPassword ?? '',
+                    ),
+                  ),
+                );
+              }
               break;
             case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
               break;
             case 2:
               final db = DatabaseHelper.instance;
