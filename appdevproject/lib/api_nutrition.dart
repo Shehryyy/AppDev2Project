@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-void main() => runApp(MaterialApp(
-  home: NutritionPage(),
-  debugShowCheckedModeBanner: false,)
-);
+import 'ProfilePage.dart';
+import 'MainPage.dart';
 
 class NutritionPage extends StatefulWidget {
+  final int userId;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+
+  const NutritionPage({
+    super.key,
+    required this.userId,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.password,
+  });
+
   @override
   _NutritionPageState createState() => _NutritionPageState();
 }
@@ -17,6 +29,7 @@ class _NutritionPageState extends State<NutritionPage> {
   List<dynamic> _items = [];
   String? _error;
   bool _isLoading = false;
+  int _currentIndex = 0;
 
   final String apiKey = 'LjtuC6pvbToF8e1veRMnEzglUJ2S3sF87CPdI7CW';
 
@@ -80,7 +93,7 @@ class _NutritionPageState extends State<NutritionPage> {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue),
           ),
           const SizedBox(height: 4),
-          Text('Serving: ${item['serving_size_g']}g', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+          Text('Serving: ${item['serving_size_g']}g', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
           const Divider(),
           Text('Calories: ${item['calories']} kcal'),
           Text('Protein: ${item['protein_g']} g'),
@@ -103,7 +116,7 @@ class _NutritionPageState extends State<NutritionPage> {
         ),
         backgroundColor: const Color(0xFFB4D9F5),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.blue),
+        automaticallyImplyLeading: false, // removes back arrow
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -151,6 +164,46 @@ class _NutritionPageState extends State<NutritionPage> {
                 const Text('Enter a food to begin.'),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        selectedItemColor: const Color(0xFF7BA8F9),
+        unselectedItemColor: const Color(0xFF7BA8F9),
+        backgroundColor: const Color(0xFFE9ECF5),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+          switch (index) {
+            case 0:
+              break; // Already on nutrition page
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MainPageProject(userId: widget.userId),
+                ),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfilePage(
+                    userId: widget.userId,
+                    firstName: widget.firstName,
+                    lastName: widget.lastName,
+                    email: widget.email,
+                    password: widget.password,
+                  ),
+                ),
+              );
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Nutritional Values'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
       ),
     );
   }
