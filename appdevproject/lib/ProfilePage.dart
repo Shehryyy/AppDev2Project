@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'HomePage.dart';
 import 'LoginPage.dart';
 import 'SQLite/sqlite.dart';
 import 'JsonModels/users.dart';
+import 'api_nutrition.dart';
+import 'MainPage.dart';
 
 class UserProfilePage extends StatefulWidget {
   final int userId;
@@ -78,20 +79,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                _buildEditableField(
-                  label: 'First Name',
-                  controller: firstNameController,
-                ),
+                _buildEditableField(label: 'First Name', controller: firstNameController),
                 const SizedBox(height: 20),
-                _buildEditableField(
-                  label: 'Last Name',
-                  controller: lastNameController,
-                ),
+                _buildEditableField(label: 'Last Name', controller: lastNameController),
                 const SizedBox(height: 20),
-                _buildEditableField(
-                  label: 'Email',
-                  controller: emailController,
-                ),
+                _buildEditableField(label: 'Email', controller: emailController),
                 const SizedBox(height: 20),
                 _buildEditableField(
                   label: 'Password',
@@ -119,27 +111,40 @@ class _UserProfilePageState extends State<UserProfilePage> {
         selectedItemColor: const Color(0xFF7BA8F9),
         unselectedItemColor: const Color(0xFF7BA8F9),
         backgroundColor: const Color(0xFFE9ECF5),
-        onTap: (index) {
+        onTap: (index) async {
           setState(() {
             _currentIndex = index;
           });
+
+          final db = DatabaseHelper.instance;
+          final user = await db.getUserById(widget.userId);
+          if (user == null) return;
+
           switch (index) {
             case 0:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NutritionPage()),
+                MaterialPageRoute(
+                  builder: (context) => NutritionPage(
+                    userId: user.userId!,
+                    firstName: user.firstName ?? '',
+                    lastName: user.lastName ?? '',
+                    email: user.email ?? '',
+                    password: user.userPassword ?? '',
+                  ),
+                ),
               );
               break;
             case 1:
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddItemPage(userId: widget.userId),
+                  builder: (context) => MainPageProject(userId: widget.userId),
                 ),
               );
               break;
             case 2:
-              break; 
+              break;
           }
         },
         items: const [
