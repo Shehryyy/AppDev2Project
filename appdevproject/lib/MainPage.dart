@@ -37,7 +37,7 @@ class _MainPageProjectState extends State<MainPageProject> {
 
     final List<Map<String, dynamic>> maps = await db.query(
       'items',
-      where: 'userId = ? AND isActive = 1',
+      where: 'userId = ?',
       whereArgs: [widget.userId],
     );
 
@@ -46,11 +46,10 @@ class _MainPageProjectState extends State<MainPageProject> {
     });
   }
 
-  Future<void> markAsBought(int itemId) async {
+  Future<void> deleteItem(int itemId) async {
     final db = await openDatabase(p.join(await getDatabasesPath(), 'items.db'));
-    await db.update(
+    await db.delete(
       'items',
-      {'isActive': 0},
       where: 'itemId = ?',
       whereArgs: [itemId],
     );
@@ -79,7 +78,7 @@ class _MainPageProjectState extends State<MainPageProject> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await markAsBought(item.itemId!);
+              await deleteItem(item.itemId!);
             },
             child: const Text("Already Bought", style: TextStyle(color: Colors.red)),
           ),
@@ -108,60 +107,25 @@ class _MainPageProjectState extends State<MainPageProject> {
             ),
             decoration: BoxDecoration(color: Color(0xFFB4D9F5)),
           ),
-          Container(
-            color: Colors.blue[50],
-            child: ListTile(
-              title: const Text("Main List"),
-              leading: const Icon(Icons.list),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
-              },
-            ),
-          ),
-          Container(
-            color: Colors.blue[50],
-            child: ListTile(
-              title: const Text("List 2"),
-              leading: const Icon(Icons.list),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
-              },
-            ),
-          ),
-          Container(
-            color: Colors.blue[50],
-            child: ListTile(
-              title: const Text("Add Items"),
-              leading: const Icon(Icons.list),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemPage(userId: widget.userId)));
-              },
-            ),
-          ),
-          Container(
-            color: Colors.blue[50],
-            child: ListTile(
-              title: const Text("Add Items Page 2"),
-              leading: const Icon(Icons.list),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemPage2(userId: widget.userId)));
-              },
-            ),
-          ),
-          Container(
-            color: Colors.blue[50],
-            child: ListTile(
-              title: const Text("Logout"),
-              leading: const Icon(Icons.lock),
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      (route) => false,
-                );
-              },
-            ),
-          ),
+          drawerItem("Main List", Icons.list, () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
+          }),
+          drawerItem("List 2", Icons.list, () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => ListOptionalProject(userId: widget.userId)));
+          }),
+          drawerItem("Add Items", Icons.add, () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemPage(userId: widget.userId)));
+          }),
+          drawerItem("Add Items Page 2", Icons.add_box, () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemPage2(userId: widget.userId)));
+          }),
+          drawerItem("Logout", Icons.logout, () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+            );
+          }),
         ],
       ),
       body: items.isEmpty
@@ -179,21 +143,24 @@ class _MainPageProjectState extends State<MainPageProject> {
             ),
             child: ListTile(
               onTap: () => _showItemDetails(item),
-              title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("Qty: ${item.quantity} | Type: ${item.type}"),
+              title: Text(
+                item.itemName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text("Quantity: ${item.quantity}"),
               trailing: Wrap(
                 spacing: 8,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blue),
                     onPressed: () {
-                      // Edit logic can be added here
+                      // Future editing logic
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      await markAsBought(item.itemId!);
+                      await deleteItem(item.itemId!);
                     },
                   ),
                 ],
@@ -209,30 +176,41 @@ class _MainPageProjectState extends State<MainPageProject> {
         backgroundColor: const Color(0xFFE9ECF5),
         onTap: (index) async {
           setState(() => _currentIndex = index);
+          final db = DatabaseHelper.instance;
+          final user = await db.getUserById(widget.userId);
+          if (user == null) return;
+
           switch (index) {
             case 0:
-              Navigator.push(context, MaterialPageRoute(builder: (context) => NutritionPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NutritionPage(
+                    userId: user.userId!,
+                    firstName: user.firstName ?? '',
+                    lastName: user.lastName ?? '',
+                    email: user.email ?? '',
+                    password: user.userPassword ?? '',
+                  ),
+                ),
+              );
               break;
             case 1:
               Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
               break;
             case 2:
-              final db = DatabaseHelper.instance;
-              final user = await db.getUserById(widget.userId);
-              if (user != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserProfilePage(
-                      userId: user.userId!,
-                      firstName: user.firstName ?? '',
-                      lastName: user.lastName ?? '',
-                      email: user.email ?? '',
-                      password: user.userPassword ?? '',
-                    ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfilePage(
+                    userId: user.userId!,
+                    firstName: user.firstName ?? '',
+                    lastName: user.lastName ?? '',
+                    email: user.email ?? '',
+                    password: user.userPassword ?? '',
                   ),
-                );
-              }
+                ),
+              );
               break;
           }
         },
@@ -241,6 +219,17 @@ class _MainPageProjectState extends State<MainPageProject> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
+      ),
+    );
+  }
+
+  Widget drawerItem(String title, IconData icon, VoidCallback onTap) {
+    return Container(
+      color: Colors.blue[50],
+      child: ListTile(
+        title: Text(title),
+        leading: Icon(icon),
+        onTap: onTap,
       ),
     );
   }
