@@ -1,4 +1,4 @@
-import 'JsonModels/items.dart';
+import 'JsonModels/items2.dart';
 import 'List2Optional.dart';
 import 'MainPage.dart';
 import 'ProfilePage.dart';
@@ -6,7 +6,6 @@ import 'api_nutrition.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import 'JsonModels/items2.dart';
 import 'select_date_page.dart';
 import 'SQLite/sqlite.dart';
 import 'JsonModels/users.dart';
@@ -27,7 +26,6 @@ class _AddItemPageState2 extends State<AddItemPage2> {
   Database? _database;
   int _currentIndex = 1;
 
-  final formKey = GlobalKey<FormState>();
   final List<String> types = ['Dairies', 'Proteins', 'Snacks', 'Fruits/Vegetables'];
 
   @override
@@ -44,15 +42,15 @@ class _AddItemPageState2 extends State<AddItemPage2> {
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-        CREATE TABLE IF NOT EXISTS items2 (
-          itemId INTEGER PRIMARY KEY AUTOINCREMENT,
-          itemName TEXT,
-          quantity TEXT,
-          type TEXT,
-          neededBy TEXT,
-          userId INTEGER
-        )
-      ''');
+          CREATE TABLE items2 (
+            itemId INTEGER PRIMARY KEY AUTOINCREMENT,
+            itemName TEXT,
+            quantity TEXT,
+            type TEXT,
+            neededBy TEXT,
+            userId INTEGER
+          )
+        ''');
       },
     );
     return _database!;
@@ -255,16 +253,10 @@ class _AddItemPageState2 extends State<AddItemPage2> {
 
           switch (index) {
             case 0:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NutritionPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NutritionPage()));
               break;
             case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
               break;
             case 2:
               final db = DatabaseHelper.instance;
