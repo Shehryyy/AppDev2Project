@@ -247,21 +247,32 @@ class _AddItemPageState2 extends State<AddItemPage2> {
         unselectedItemColor: const Color(0xFF7BA8F9),
         backgroundColor: const Color(0xFFE9ECF5),
         onTap: (index) async {
-          setState(() {
-            _currentIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.push(context, MaterialPageRoute(builder: (context) => NutritionPage()));
-              break;
-            case 1:
-              Navigator.push(context, MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)));
-              break;
-            case 2:
-              final db = DatabaseHelper.instance;
-              final user = await db.getUserById(widget.userId);
-              if (user != null) {
+          setState(() => _currentIndex = index);
+          final db = DatabaseHelper.instance;
+          final user = await db.getUserById(widget.userId);
+          if (user != null) {
+            switch (index) {
+              case 0:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NutritionPage(
+                      userId: user.userId!,
+                      firstName: user.firstName ?? '',
+                      lastName: user.lastName ?? '',
+                      email: user.email ?? '',
+                      password: user.userPassword ?? '',
+                    ),
+                  ),
+                );
+                break;
+              case 1:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainPageProject(userId: widget.userId)),
+                );
+                break;
+              case 2:
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -274,8 +285,8 @@ class _AddItemPageState2 extends State<AddItemPage2> {
                     ),
                   ),
                 );
-              }
-              break;
+                break;
+            }
           }
         },
         items: const [
