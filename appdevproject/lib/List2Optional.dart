@@ -24,7 +24,7 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
     final db = await _initDatabase();
     final List<Map<String, dynamic>> maps = await db.query(
       'items2',
-      where: 'userId = ?',
+      where: 'userId = ? AND isActive = 1',
       whereArgs: [widget.userId],
     );
     setState(() {
@@ -45,17 +45,31 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
             quantity TEXT,
             type TEXT,
             neededBy TEXT,
-            userId INTEGER
+            userId INTEGER,
+            isActive INTEGER DEFAULT 1
           )
         ''');
       },
     );
   }
 
+  Future<void> markItemAsBought(int itemId) async {
+    final db = await openDatabase(p.join(await getDatabasesPath(), 'items2.db'));
+    await db.update(
+      'items2',
+      {'isActive' : 0},
+      where: 'itemId = ?',
+      whereArgs: [itemId],
+    );
+    await _loadItems2();
+  }
+
   Future<void> deleteItem(int itemId) async {
     final db = await _initDatabase();
-    await db.delete('items2', where: 'itemId = ?', whereArgs: [itemId]);
-    _loadItems2();
+    await db.delete('items2',
+        where: 'itemId = ?',
+        whereArgs: [itemId]);
+    await _loadItems2();
   }
 
   void _showItemDetails(Items2 item) {
@@ -80,9 +94,9 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await deleteItem(item.itemId!);
+              await markItemAsBought(item.itemId!);
             },
-            child: const Text("Delete Item", style: TextStyle(color: Colors.red)),
+            child: const Text("Already Bought", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -121,7 +135,7 @@ class _ListOptionalProjectState extends State<ListOptionalProject> {
               trailing: IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
                 onPressed: () async {
-                  await deleteItem(item.itemId!);
+                  await markItemAsBought(item.itemId!);
                 },
               ),
             ),

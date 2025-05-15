@@ -1,3 +1,4 @@
+import 'package:appdevproject/PreviousItems.dart';
 import 'package:flutter/material.dart';
 import 'LoginPage.dart';
 import 'SQLite/sqlite.dart';
@@ -92,7 +93,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   helperText: 'Your password must be at least 8 characters',
                 ),
                 const SizedBox(height: 30),
-                _blueButton('List of previously bought items', () {}),
+                _blueButton('List of previously bought items', () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PreviousItemsPage(userId: widget.userId,)));
+                }),
                 const SizedBox(height: 15),
                 _blueButton('Log out', () {
                   Navigator.pushAndRemoveUntil(

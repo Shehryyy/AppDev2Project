@@ -46,7 +46,8 @@ class _AddItemPageState extends State<AddItemPage> {
           quantity TEXT,
           type TEXT,
           neededBy TEXT,
-          userId INTEGER
+          userId INTEGER,
+          isActive INTEGER DEFAULT 1
         )
         ''');
       },

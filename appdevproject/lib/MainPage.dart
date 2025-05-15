@@ -37,7 +37,7 @@ class _MainPageProjectState extends State<MainPageProject> {
 
     final List<Map<String, dynamic>> maps = await db.query(
       'items',
-      where: 'userId = ?',
+      where: 'userId = ? AND isActive = 1',
       whereArgs: [widget.userId],
     );
 
@@ -52,6 +52,17 @@ class _MainPageProjectState extends State<MainPageProject> {
       'items',
       where: 'itemId = ?',
       whereArgs: [itemId],
+    );
+    await _loadItems();
+  }
+
+  Future<void> markItemAsBought(int itemId) async {
+    final db = await openDatabase(p.join(await getDatabasesPath(), 'items.db'));
+    await db.update(
+        'items',
+    {'isActive' : 0},
+    where: 'itemId = ?',
+    whereArgs: [itemId],
     );
     await _loadItems();
   }
@@ -78,7 +89,7 @@ class _MainPageProjectState extends State<MainPageProject> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await deleteItem(item.itemId!);
+              await markItemAsBought(item.itemId!);
             },
             child: const Text("Already Bought", style: TextStyle(color: Colors.red)),
           ),
@@ -160,7 +171,7 @@ class _MainPageProjectState extends State<MainPageProject> {
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      await deleteItem(item.itemId!);
+                      await markItemAsBought(item.itemId!);
                     },
                   ),
                 ],

@@ -5,6 +5,7 @@ class Items {
   final String type;
   final String neededBy;
   final int userId;
+  final int isActive;
 
   Items({
     this.itemId,
@@ -13,6 +14,7 @@ class Items {
     required this.type,
     required this.neededBy,
     required this.userId,
+      this.isActive = 1
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Items {
       'type': type,
       'neededBy': neededBy,
       'userId': userId,
+      'isActive' : isActive
     };
   }
 
@@ -34,6 +37,7 @@ class Items {
       type: map['type'],
       neededBy: map['neededBy'],
       userId: map['userId'],
+      isActive: map['isActive']
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'HomePage.dart';
-import 'package:project/SQLite/sqlite.dart';
 import 'JsonModels/users.dart';
 import 'SQLite/sqlite.dart';
 import 'SignUp.dart';
