@@ -1,11 +1,9 @@
 import 'LoginPage.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'notification_setup.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  initializeNotifications();
   runApp(const CartSnapApp());
 }
 
