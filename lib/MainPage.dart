@@ -9,7 +9,7 @@ import 'package:sqflite/sqflite.dart';
 import 'JsonModels/items.dart';
 import 'ProfilePage.dart';
 import 'SQLite/sqlite.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class MainPageProject extends StatefulWidget {
   final int userId;
@@ -22,62 +22,52 @@ class MainPageProject extends StatefulWidget {
 class _MainPageProjectState extends State<MainPageProject> {
   List<Items> items = [];
   int _currentIndex = 1;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
-    requestNotificationPermissions();
+    _initializeNotifications();
     _loadItems();
   }
 
-  void requestNotificationPermissions() {
-    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
-        AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-    });
+  void _initializeNotifications() async {
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(android: androidSettings);
+    await flutterLocalNotificationsPlugin.initialize(initSettings);
   }
 
   Future<void> scheduleNotification(Items item) async {
     final now = DateTime.now();
     final neededDate = DateTime.parse(item.neededBy);
-    final difference = neededDate.difference(now).inDays;
+    final dateDiff = neededDate.difference(now).inDays;
 
-    print("🟡 Checking item '${item.itemName}': isActive=${item.isActive}, userId=${item.userId}, dateDiff=$difference");
+    print("🟡 Checking item '${item.itemName}': isActive=${item.isActive}, userId=${item.userId}, dateDiff=$dateDiff");
 
-    if (item.isActive == 1 && item.userId == widget.userId && difference == 0) {
-      final scheduleTime = now.add(const Duration(seconds: 10));
-      print("✅ Scheduling notification for '${item.itemName}'");
-
-      await AwesomeNotifications().createNotification(
-        schedule: NotificationCalendar(
-          year: scheduleTime.year,
-          month: scheduleTime.month,
-          day: scheduleTime.day,
-          hour: scheduleTime.hour,
-          minute: scheduleTime.minute,
-          second: scheduleTime.second,
-          millisecond: 0,
-          repeats: false,
-        ),
-        content: NotificationContent(
-          id: item.itemId!,
-          channelKey: 'basic_channel',
-          title: 'Reminder: ${item.itemName}',
-          body: 'You need this item tomorrow!',
-          notificationLayout: NotificationLayout.Default,
-        ),
+    if (item.isActive == 1 && item.userId == widget.userId && dateDiff == 0) {
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'channel_id',
+        'channel_name',
+        importance: Importance.high,
+        priority: Priority.high,
       );
+      const NotificationDetails generalNotificationDetails = NotificationDetails(android: androidDetails);
+
+      await flutterLocalNotificationsPlugin.show(
+        item.itemId!,
+        'Reminder: ${item.itemName}',
+        'You need this item tomorrow!',
+        generalNotificationDetails,
+      );
+
+      print("✅ Notification sent for '${item.itemName}'");
     } else {
       print("⛔ Skipping notification for '${item.itemName}'");
     }
   }
 
   Future<void> _loadItems() async {
-    final db = await openDatabase(
-      p.join(await getDatabasesPath(), 'items.db'),
-    );
-
+    final db = await openDatabase(p.join(await getDatabasesPath(), 'items.db'));
     final List<Map<String, dynamic>> maps = await db.query(
       'items',
       where: 'userId = ? AND isActive = 1',
@@ -85,7 +75,6 @@ class _MainPageProjectState extends State<MainPageProject> {
     );
 
     List<Items> loadedItems = maps.map((map) => Items.fromMap(map)).toList();
-
     setState(() {
       items = loadedItems;
     });
@@ -104,7 +93,7 @@ class _MainPageProjectState extends State<MainPageProject> {
   Future<void> deleteItem(int itemId) async {
     final db = await openDatabase(p.join(await getDatabasesPath(), 'items.db'));
     await db.delete('items', where: 'itemId = ?', whereArgs: [itemId]);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Item deleted')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item deleted')));
     await _loadItems();
   }
 
@@ -122,9 +111,15 @@ class _MainPageProjectState extends State<MainPageProject> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Item Name')),
-              TextField(controller: quantityController, decoration: const InputDecoration(labelText: 'Quantity'), keyboardType: TextInputType.number),
+              TextField(
+                controller: quantityController,
+                decoration: const InputDecoration(labelText: 'Quantity'),
+                keyboardType: TextInputType.number,
+              ),
               DropdownButtonFormField<String>(
-                value: selectedType,
+                value: ['Fruits/Vegetables', 'Proteins', 'Dairy', 'Snacks'].contains(selectedType)
+                    ? selectedType
+                    : null,
                 items: ['Fruits/Vegetables', 'Proteins', 'Dairy', 'Snacks']
                     .map((type) => DropdownMenuItem(value: type, child: Text(type)))
                     .toList(),
